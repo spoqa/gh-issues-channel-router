@@ -17,8 +17,8 @@ def index():
                 "username": "github",
                 "icon_emoji": ":octocat:",
                 "channel": u"#{0}".format(label['name']),
-                "text": u"#{0} @{1}: {2}\n<{2}>".format(
-                    data['issue']['id'],
+                "text": u"#{0} @{1}: {2}\n<{3}>".format(
+                    data['issue']['number'],
                     data['comment']['user']['login'],
                     data['comment']['body'],
                     data['comment']['url']
@@ -32,7 +32,7 @@ def index():
                 "con_emoji": ":octocat:",
                 "channel": u"#{0}".format(label['name']),
                 "text": u"#{0} {1} by @{2}\n{3}\n<{4}>".format(
-                    data['issue']['id'],
+                    data['issue']['number'],
                     data['issue']['title'],
                     data['issue']['user']['login'],
                     data['issue']['body'],
