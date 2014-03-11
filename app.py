@@ -21,7 +21,7 @@ def index():
                     data['issue']['number'],
                     data['comment']['user']['login'],
                     data['comment']['body'],
-                    data['comment']['url']
+                    data['comment']['html_url']
                 )
             }
             r = requests.post(url, data=json.dumps(payload))
@@ -36,7 +36,7 @@ def index():
                     data['issue']['title'],
                     data['issue']['user']['login'],
                     data['issue']['body'],
-                    data['issue']['url']
+                    data['issue']['html_url']
                 )
             }
             r = requests.post(url, data=json.dumps(payload))
