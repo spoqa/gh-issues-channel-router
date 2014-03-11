@@ -6,7 +6,7 @@ app = Flask(__name__)
 url = ('https://spoqa.slack.com/services/hooks/incoming-webhook'
        '?token=EqCiU0T2MCimJLsn30j7JUPF')
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
     data = json.loads(request.data)
     if 'issue_comment' in data:
