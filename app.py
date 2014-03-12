@@ -29,7 +29,7 @@ def index():
         for label in data['issue']['labels']:
             payload = {
                 "username": "github",
-                "con_emoji": ":octocat:",
+                "icon_emoji": ":octocat:",
                 "channel": u"#{0}".format(label['name']),
                 "text": u"#{0} {1} by @{2}\n{3}\n<{4}>".format(
                     data['issue']['number'],
