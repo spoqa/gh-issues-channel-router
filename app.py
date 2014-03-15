@@ -12,10 +12,18 @@ class GhEventHandler(object):
 
     _handler_map = {}
 
-    def add_event(self, event):
+    def add_event(self, event, **options):
         def decorator(handler):
             if event not in self._handler_map:
-                self._handler_map[event] = handler
+                self._handler_map[event] = dict(actions={})
+
+            if 'actions' in options:
+                assert len(options['actions']) != 0, \
+                    "{0} has empty actions".format(handler.__name__)
+                for action in options['actions']:
+                    self._handler_map[event]['actions'][action] = handler
+            else:
+                self._handler_map[event]['default'] = handler
 
             def decorated_function(*args, **kwargs):
                 return handler(*args, **kwargs)
@@ -26,7 +34,11 @@ class GhEventHandler(object):
         event = request.headers['X-GitHub-Event']
         if event in self._handler_map:
             data = json.loads(request.data)
-            self._handler_map[event](data)
+            action = data['action']
+            if action in self._handler_map[event]['actions']:
+                self._handler_map[event]['actions'][action](data)
+            elif 'default' in self._handler_map[event]:
+                self._handler_map[event]['default'](data)
 
 
 handler = GhEventHandler()
