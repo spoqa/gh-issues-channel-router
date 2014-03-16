@@ -79,6 +79,26 @@ def issues(data):
         requests.post(url, data=json.dumps(payload))
 
 
+
+@handler.add_event("issues", actions=['closed', 'reopened'])
+def issues(data):
+    for label in data['issue']['labels']:
+        payload = {
+            "username": "github",
+            "con_emoji": ":octocat:",
+            "channel": u"#{0}".format(label['name']),
+            "text": u"{0}(#{1}) {2} by @{3}\n{4}\n<{5}>".format(
+                data['issue']['title'],
+                data['issue']['number'],
+                data['action'].upper(),
+                data['issue']['user']['login'],
+                data['issue']['body'],
+                data['issue']['html_url']
+            )
+        }
+        requests.post(url, data=json.dumps(payload))
+
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     handler.handle()
