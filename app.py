@@ -3,9 +3,12 @@ import requests
 
 from flask import Flask, request, jsonify
 
+from conf import token
+
+
 app = Flask(__name__)
 url = ('https://spoqa.slack.com/services/hooks/incoming-webhook'
-       '?token=EqCiU0T2MCimJLsn30j7JUPF')
+       '?token=%s' % token)
 
 
 class GhEventHandler(object):
