@@ -34,7 +34,7 @@ class GhEventHandler(object):
         return decorator
 
     def handle(self):
-        event = request.headers['X-GitHub-Event']
+        event = request.headers.get('X-GitHub-Event', None)
         if event in self._handler_map:
             data = json.loads(request.data)
             action = data['action']
@@ -80,7 +80,6 @@ def issues(data):
             )
         }
         requests.post(url, data=json.dumps(payload))
-
 
 
 @handler.add_event("issues", actions=['closed', 'reopened'])
