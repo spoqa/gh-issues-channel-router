@@ -104,7 +104,9 @@ def issues(data):
 @handler.add_event("pull_request")
 def pull_requests(data):
     issue_url = data["issue"]["href"]
+    print issue_url
     result = requests.get(issue_url, auth=(github_oauth_token, "x-oauth-basic"))
+    print result
     for label in result.data["labels"]:
         payload = {
             "username": "github",
@@ -119,6 +121,7 @@ def pull_requests(data):
                 data["html_url"]
             )
         }
+        print url, json.dumps(payload)
         requests.post(url, data=json.dumps(payload))
 
 
