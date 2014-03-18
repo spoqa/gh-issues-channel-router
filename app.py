@@ -1,11 +1,19 @@
+import os
 import json
 import requests
 
 from flask import Flask, request, jsonify
 
+
+SLACK_REQUEST_URL = os.environ.get("SLACK_REQUEST_URL")
+GITHUB_OAUTH_TOKEN =  os.environ.get("GITHUB_OAUTH_TOKEN")
+
+
 app = Flask(__name__)
-url = ('https://spoqa.slack.com/services/hooks/incoming-webhook'
-       '?token=EqCiU0T2MCimJLsn30j7JUPF')
+
+
+def slack_request(payload):
+    return request.post(SLACK_REQUEST_URL, data=json.dumps(payload))
 
 
 class GhEventHandler(object):
@@ -17,13 +25,13 @@ class GhEventHandler(object):
             if event not in self._handler_map:
                 self._handler_map[event] = dict(actions={})
 
-            if 'actions' in options:
-                assert len(options['actions']) != 0, \
+            if "actions" in options:
+                assert len(options["actions"]) != 0, \
                     "{0} has empty actions".format(handler.__name__)
-                for action in options['actions']:
-                    self._handler_map[event]['actions'][action] = handler
+                for action in options["actions"]:
+                    self._handler_map[event]["actions"][action] = handler
             else:
-                self._handler_map[event]['default'] = handler
+                self._handler_map[event]["default"] = handler
 
             def decorated_function(*args, **kwargs):
                 return handler(*args, **kwargs)
@@ -31,14 +39,17 @@ class GhEventHandler(object):
         return decorator
 
     def handle(self):
-        event = request.headers['X-GitHub-Event']
+        event = request.headers.get("X-GitHub-Event")
         if event in self._handler_map:
-            data = json.loads(request.data)
-            action = data['action']
-            if action in self._handler_map[event]['actions']:
-                self._handler_map[event]['actions'][action](data)
-            elif 'default' in self._handler_map[event]:
-                self._handler_map[event]['default'](data)
+            try:
+                data = json.loads(request.data)
+            except ValueError:
+                data = json.loads(request.values.get("payload"))
+            action = data["action"]
+            if action in self._handler_map[event]["actions"]:
+                self._handler_map[event]["actions"][action](data)
+            elif "default" in self._handler_map[event]:
+                self._handler_map[event]["default"](data)
 
 
 handler = GhEventHandler()
@@ -46,63 +57,110 @@ handler = GhEventHandler()
 
 @handler.add_event("issue_comment")
 def issue_comment(data):
-    for label in data['issue']['labels']:
+    for label in data["issue"]["labels"]:
         payload = {
             "username": "github",
             "icon_emoji": ":octocat:",
-            "channel": u"#{0}".format(label['name']),
+            "channel": u"#{0}".format(label["name"]),
             "text": u"#{0} @{1}: {2}\n<{3}>".format(
-                data['issue']['number'],
-                data['comment']['user']['login'],
-                data['comment']['body'],
-                data['comment']['html_url']
+                data["issue"]["number"],
+                data["comment"]["user"]["login"],
+                data["comment"]["body"],
+                data["comment"]["html_url"]
             )
         }
-        requests.post(url, data=json.dumps(payload))
+        slack_request(payload)
 
 
 @handler.add_event("issues")
 def issues(data):
-    for label in data['issue']['labels']:
+    for label in data["issue"]["labels"]:
         payload = {
             "username": "github",
             "icon_emoji": ":octocat:",
-            "channel": u"#{0}".format(label['name']),
+            "channel": u"#{0}".format(label["name"]),
             "text": u"#{0} {1} by @{2}\n{3}\n<{4}>".format(
-                data['issue']['number'],
-                data['issue']['title'],
-                data['issue']['user']['login'],
-                data['issue']['body'],
-                data['issue']['html_url']
+                data["issue"]["number"],
+                data["issue"]["title"],
+                data["issue"]["user"]["login"],
+                data["issue"]["body"],
+                data["issue"]["html_url"]
             )
         }
-        requests.post(url, data=json.dumps(payload))
+        slack_request(payload)
 
 
-
-@handler.add_event("issues", actions=['closed', 'reopened'])
+@handler.add_event("issues", actions=["closed", "reopened"])
 def issues(data):
-    for label in data['issue']['labels']:
+    for label in data["issue"]["labels"]:
         payload = {
             "username": "github",
             "icon_emoji": ":octocat:",
-            "channel": u"#{0}".format(label['name']),
+            "channel": u"#{0}".format(label["name"]),
             "text": u"{0}(#{1}) {2} by @{3}\n{4}\n<{5}>".format(
-                data['issue']['title'],
-                data['issue']['number'],
-                data['action'].upper(),
-                data['issue']['user']['login'],
-                data['issue']['body'],
-                data['issue']['html_url']
+                data["issue"]["title"],
+                data["issue"]["number"],
+                data["action"].upper(),
+                data["issue"]["user"]["login"],
+                data["issue"]["body"],
+                data["issue"]["html_url"]
             )
         }
-        requests.post(url, data=json.dumps(payload))
+        slack_request(payload)
 
 
-@app.route('/', methods=['GET', 'POST'])
+@handler.add_event("pull_request")
+def pull_requests(data):
+    data = data["pull_request"]
+    issue_url = data["issue_url"]
+    result = json.loads(requests.get(issue_url, auth=(GITHUB_OAUTH_TOKEN, 
+                                                      "x-oauth-basic")).text)
+    for label in result["labels"]:
+        payload = {
+            "username": "github",
+            "icon_emoji": ":octocat:",
+            "channel": u"#{0}".format(label["name"]),
+            "text": u"{0}(#{1}) {2} by @{3}\n{4}\n<{5}>".format(
+                data["title"],
+                data["number"],
+                data["state"].upper(),
+                data["user"]["login"],
+                data["body"],
+                data["html_url"]
+            )
+        }
+        slack_request(payload)
+
+
+@handler.add_event("pull_request_review_comment")
+def pull_request_review_comment(data):
+    data = data["pull_request_review_comment"]
+    pr_url = data["pull_request_url"]
+    result = json.loads(requests.get(pr_url, auth=(GITHUB_OAUTH_TOKEN, 
+                                                   "x-oauth-basic")).text)
+    result = json.loads(requests.get(result["pull_request"]["issue_url"],
+                                     auth=(GITHUB_OAUTH_TOKEN,
+                                           "x-oauth-basic")).text)
+    for label in result["labels"]:
+        payload = {
+            "username": "github",
+            "icon_emoji": ":octocat:",
+            "channel": u"#{0}".format(label["name"]),
+            "text": u"{0}(@{1}) by @{2}\n{3}\n<{4}>".format(
+                data["id"],
+                data["commit_id"],
+                data["user"]["login"],
+                data["body"],
+                data["_links"]["html"]["href"]
+            )
+        }
+        slack_request(payload)
+
+
+@app.route("/", methods=["GET", "POST"])
 def index():
     handler.handle()
-    return jsonify(result='success')
+    return jsonify(result="success")
 
 if __name__ == "__main__":
     app.run(debug=True)
