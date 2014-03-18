@@ -108,7 +108,8 @@ def issues(data):
 def pull_requests(data):
     data = data["pull_request"]
     issue_url = data["issue_url"]
-    result = json.loads(requests.get(issue_url, auth=(github_oauth_token, "x-oauth-basic")).text)
+    result = json.loads(requests.get(issue_url, auth=(github_oauth_token, 
+                                                      "x-oauth-basic")).text)
     for label in result["labels"]:
         payload = {
             "username": "github",
