@@ -36,7 +36,10 @@ class GhEventHandler(object):
     def handle(self):
         event = request.headers.get("X-GitHub-Event", None)
         if event in self._handler_map:
-            data = json.loads(request.data)
+            try:
+                data = json.loads(request.data)
+            except ValueError:
+                data = json.loads(request.values.get("payload"))
             action = data["action"]
             if action in self._handler_map[event]["actions"]:
                 self._handler_map[event]["actions"][action](data)
@@ -103,11 +106,10 @@ def issues(data):
 
 @handler.add_event("pull_request")
 def pull_requests(data):
-    issue_url = data["issue"]["href"]
-    print issue_url
-    result = requests.get(issue_url, auth=(github_oauth_token, "x-oauth-basic"))
-    print result
-    for label in result.data["labels"]:
+    data = data["pull_request"]
+    issue_url = data["issue_url"]
+    result = json.loads(requests.get(issue_url, auth=(github_oauth_token, "x-oauth-basic")).text)
+    for label in result["labels"]:
         payload = {
             "username": "github",
             "icon_emoji": ":octocat:",
@@ -121,7 +123,6 @@ def pull_requests(data):
                 data["html_url"]
             )
         }
-        print url, json.dumps(payload)
         requests.post(url, data=json.dumps(payload))
 
 
@@ -131,4 +132,4 @@ def index():
     return jsonify(result="success")
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run("0.0.0.0", debug=True)
