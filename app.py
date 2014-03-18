@@ -1,14 +1,19 @@
+import os
 import json
 import requests
 
 from flask import Flask, request, jsonify
 
-from conf import token, github_oauth_token
+
+SLACK_REQUEST_URL = os.environ.get("SLACK_REQUEST_URL")
+GITHUB_OAUTH_TOKEN =  os.environ.get("GITHUB_OAUTH_TOKEN")
 
 
 app = Flask(__name__)
-url = ("https://spoqa.slack.com/services/hooks/incoming-webhook"
-       "?token=%s" % token)
+
+
+def slack_request(payload):
+    return request.post(SLACK_REQUEST_URL, data=json.dumps(payload))
 
 
 class GhEventHandler(object):
@@ -34,7 +39,7 @@ class GhEventHandler(object):
         return decorator
 
     def handle(self):
-        event = request.headers.get("X-GitHub-Event", None)
+        event = request.headers.get("X-GitHub-Event")
         if event in self._handler_map:
             try:
                 data = json.loads(request.data)
@@ -64,7 +69,7 @@ def issue_comment(data):
                 data["comment"]["html_url"]
             )
         }
-        requests.post(url, data=json.dumps(payload))
+        slack_request(payload)
 
 
 @handler.add_event("issues")
@@ -82,7 +87,7 @@ def issues(data):
                 data["issue"]["html_url"]
             )
         }
-        requests.post(url, data=json.dumps(payload))
+        slack_request(payload)
 
 
 @handler.add_event("issues", actions=["closed", "reopened"])
@@ -101,14 +106,14 @@ def issues(data):
                 data["issue"]["html_url"]
             )
         }
-        requests.post(url, data=json.dumps(payload))
+        slack_request(payload)
 
 
 @handler.add_event("pull_request")
 def pull_requests(data):
     data = data["pull_request"]
     issue_url = data["issue_url"]
-    result = json.loads(requests.get(issue_url, auth=(github_oauth_token, 
+    result = json.loads(requests.get(issue_url, auth=(GITHUB_OAUTH_TOKEN, 
                                                       "x-oauth-basic")).text)
     for label in result["labels"]:
         payload = {
@@ -124,17 +129,17 @@ def pull_requests(data):
                 data["html_url"]
             )
         }
-        requests.post(url, data=json.dumps(payload))
+        slack_request(payload)
 
 
 @handler.add_event("pull_request_review_comment")
 def pull_request_review_comment(data):
     data = data["pull_request_review_comment"]
     pr_url = data["pull_request_url"]
-    result = json.loads(requests.get(pr_url, auth=(github_oauth_token, 
+    result = json.loads(requests.get(pr_url, auth=(GITHUB_OAUTH_TOKEN, 
                                                    "x-oauth-basic")).text)
     result = json.loads(requests.get(result["pull_request"]["issue_url"],
-                                     auth=(github_oauth_token,
+                                     auth=(GITHUB_OAUTH_TOKEN,
                                            "x-oauth-basic")).text)
     for label in result["labels"]:
         payload = {
@@ -149,7 +154,7 @@ def pull_request_review_comment(data):
                 data["_links"]["html"]["href"]
             )
         }
-        requests.post(url, data=json.dumps(payload))
+        slack_request(payload)
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -158,4 +163,4 @@ def index():
     return jsonify(result="success")
 
 if __name__ == "__main__":
-    app.run("0.0.0.0", debug=True)
+    app.run(debug=True)
