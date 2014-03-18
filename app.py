@@ -13,7 +13,7 @@ app = Flask(__name__)
 
 
 def slack_request(payload):
-    return request.post(SLACK_REQUEST_URL, data=json.dumps(payload))
+    return requests.post(SLACK_REQUEST_URL, data=json.dumps(payload))
 
 
 class GhEventHandler(object):
