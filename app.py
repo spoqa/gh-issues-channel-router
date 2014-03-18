@@ -13,7 +13,7 @@ app = Flask(__name__)
 
 
 def slack_request(payload):
-    return request.post(SLACK_REQUEST_URL, data=json.dumps(payload))
+    return requests.post(SLACK_REQUEST_URL, data=json.dumps(payload))
 
 
 class GhEventHandler(object):
@@ -163,4 +163,4 @@ def index():
     return jsonify(result="success")
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run("0.0.0.0", debug=True)
