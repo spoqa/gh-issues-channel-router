@@ -127,6 +127,31 @@ def pull_requests(data):
         requests.post(url, data=json.dumps(payload))
 
 
+@handler.add_event("pull_request_review_comment")
+def pull_request_review_comment(data):
+    data = data["pull_request_review_comment"]
+    pr_url = data["pull_request_url"]
+    result = json.loads(requests.get(pr_url, auth=(github_oauth_token, 
+                                                   "x-oauth-basic")).text)
+    result = json.loads(requests.get(result["pull_request"]["issue_url"],
+                                     auth=(github_oauth_token,
+                                           "x-oauth-basic")).text)
+    for label in result["labels"]:
+        payload = {
+            "username": "github",
+            "icon_emoji": ":octocat:",
+            "channel": u"#{0}".format(label["name"]),
+            "text": u"{0}(@{1}) by @{2}\n{3}\n<{4}>".format(
+                data["id"],
+                data["commit_id"],
+                data["user"]["login"],
+                data["body"],
+                data["_links"]["html"]["href"]
+            )
+        }
+        requests.post(url, data=json.dumps(payload))
+
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     handler.handle()
