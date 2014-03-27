@@ -55,7 +55,7 @@ class Payload(object):
     def to_dict(self):
         result_dict = {"username": self.username, "icon_emoji": self.icon_emoji,
                        "channel": "#%s" % self.channel, "text": self.message,
-                       "attachments": self.attachments}
+                       "attachments": self.attachments.to_dict()}
         return result_dict
 
 
