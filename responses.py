@@ -22,7 +22,6 @@ class Payload(object):
         result = "%s" % self.title if self.title else ""
         result += "(#%s) " % self.number if self.number else ""
         result += "[@%s] " % self.commit_id if self.commit_id else ""
-        result += "%s " % self.title if self.title else ""
         result += "%s " % self.action.upper() if self.action else ""
         result += "by @%s\n" % self.user if self.user else "\n"
         result += "%s\n" % self.body if self.body else ""
