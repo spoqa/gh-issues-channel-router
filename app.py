@@ -122,7 +122,7 @@ def pull_requests(data):
 
 @handler.add_event("pull_request_review_comment")
 def pull_request_review_comment(data):
-    data = data["pull_request_review_comment"]
+    data = data["comment"]
     pr_url = data["pull_request_url"]
     result = json.loads(requests.get(pr_url, auth=(GITHUB_OAUTH_TOKEN, 
                                                    "x-oauth-basic")).text)
