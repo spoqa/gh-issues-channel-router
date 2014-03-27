@@ -39,10 +39,11 @@ class Payload(object):
             value = getattr(self, x)
             if value:
                 if x == "body":
-                    value = markdown.markdown(value)
                     short = True
                 else:
                     short = False
+                if x == "url":
+                    value = "<%(url)s>" % {"url": value}
                 fields.append(Field(title=x, value=value, short=short))
         return fields
 
@@ -55,13 +56,13 @@ class Payload(object):
     def to_dict(self):
         result_dict = {"username": self.username, "icon_emoji": self.icon_emoji,
                        "channel": "#%s" % self.channel, "text": self.message,
-                       "attachments": self.attachments.to_dict()}
+                       "attachments": [self.attachments.to_dict()]}
         return result_dict
 
 
 class Attachment(object):
 
-    def __init__(self, fallback="", text="", color="96bde5", *fields):
+    def __init__(self, fallback="", text="", color="96bde5", fields=[]):
         self.fallback = fallback
         self.text = text
         self.pretext = markdown.markdown(text)
@@ -81,15 +82,13 @@ class Attachment(object):
 class Field(object):
 
     def __init__(self, title, value, short=False):
-
         self.title = title
         self.value = value
         self.short = short
 
     def to_dict(self):
-
         return {
             "title": self.title,
             "value": self.value,
-            "short": self.short
+            "short": self.short,
         }
