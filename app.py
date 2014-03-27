@@ -127,7 +127,7 @@ def pull_request_review_comment(data):
     pr_url = data["pull_request_url"]
     result = json.loads(requests.get(pr_url, auth=(GITHUB_OAUTH_TOKEN, 
                                                    "x-oauth-basic")).text)
-    result = json.loads(requests.get(result["pull_request"]["issue_url"],
+    result = json.loads(requests.get(result["issue_url"],
                                      auth=(GITHUB_OAUTH_TOKEN,
                                            "x-oauth-basic")).text)
     for label in result["labels"]:
