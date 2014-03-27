@@ -5,7 +5,7 @@ class Payload(object):
 
     def __init__(self, channel=None, number=None, title=None, action=None,
                  user=None, body=None, url=None, username="github",
-                 commit_id=None, icon_emoji="octocat", attachments=None):
+                 commit_id=None, icon_emoji=":octocat:", attachments=None):
         self.channel = channel
         self.number = number
         self.title = title
