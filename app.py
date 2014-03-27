@@ -47,7 +47,10 @@ class GhEventHandler(object):
                 data = json.loads(request.data)
             except ValueError:
                 data = json.loads(request.values.get("payload"))
-            action = data["action"]
+            try:
+                action = data["action"]
+            except KeyError:
+                action = ""
             if action in self._handler_map[event]["actions"]:
                 self._handler_map[event]["actions"][action](data)
             elif "default" in self._handler_map[event]:
