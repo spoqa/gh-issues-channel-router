@@ -12,7 +12,6 @@ GITHUB_OAUTH_TOKEN =  os.environ.get("GITHUB_OAUTH_TOKEN")
 
 
 app = Flask(__name__)
-app.config["DEBUG"] = True
 
 
 def slack_request(payload):
