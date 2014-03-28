@@ -68,7 +68,8 @@ def issue_comment(data):
             Payload(channel=label["name"], number=data["issue"]["number"],
                     user=data["comment"]["user"]["login"],
                     body=data["comment"]["body"],
-                    url=data["comment"]["html_url"]
+                    url=data["comment"]["html_url"],
+                    label="New issue comment"
             )
         )
 
@@ -82,7 +83,8 @@ def issues(data):
                     title=data["issue"]["title"],
                     user=data["issue"]["user"]["login"],
                     body=data["issue"]["body"],
-                    url=data["issue"]["html_url"]
+                    url=data["issue"]["html_url"],
+                    label="New issue"
             )
         )
 
@@ -97,7 +99,8 @@ def issues(data):
                     title=data["issue"]["title"],
                     user=data["issue"]["user"]["login"],
                     body=data["issue"]["body"],
-                    url=data["issue"]["html_url"]
+                    url=data["issue"]["html_url"],
+                    label="Issue status changed"
             )
         )
 
@@ -116,7 +119,8 @@ def pull_requests(data):
                     title=data["title"],
                     user=data["user"]["login"],
                     body=data["body"],
-                    url=data["html_url"]
+                    url=data["html_url"],
+                    label="New pull request"
             )
         )
 
@@ -137,7 +141,8 @@ def pull_request_review_comment(data):
                     commit_id=data["commit_id"],
                     user=data["user"]["login"],
                     body=data["body"],
-                    url=data["_links"]["html"]["href"]
+                    url=data["_links"]["html"]["href"],
+                    label="Pull request review comment"
             )
         )
 

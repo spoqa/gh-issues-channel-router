@@ -5,7 +5,8 @@ class Payload(object):
 
     def __init__(self, channel=None, number=None, title=None, action=None,
                  user=None, body=None, url=None, username="github",
-                 commit_id=None, icon_emoji=":octocat:", attachments=None):
+                 commit_id=None, icon_emoji=":octocat:", attachments=None,
+                 label=None):
         self.channel = channel
         self.number = number
         self.title = title
@@ -14,6 +15,7 @@ class Payload(object):
         self.body = body
         self.url = url
         self.commit_id = commit_id
+        self.label = label
 
         self.username = username
         self.icon_emoji = icon_emoji
@@ -22,13 +24,7 @@ class Payload(object):
 
     @property
     def message(self):
-        result = "%s" % self.title if self.title else ""
-        result += "(#%s) " % self.number if self.number else ""
-        result += "[@%s] " % self.commit_id if self.commit_id else ""
-        result += "%s " % self.action.upper() if self.action else ""
-        result += "by @%s\n" % self.user if self.user else "\n"
-        result += "%s\n" % self.body if self.body else ""
-        result += "%s" % self.url if self.url else ""
+        result = "%s by @%s (%s)" % (self.label, self.user, self.url)
         return result
 
     def _generate_default_fields(self):
