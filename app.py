@@ -7,8 +7,13 @@ from flask import Flask, request, jsonify
 from responses import Payload
 
 
-SLACK_REQUEST_URL = os.environ.get("SLACK_REQUEST_URL")
-GITHUB_OAUTH_TOKEN =  os.environ.get("GITHUB_OAUTH_TOKEN")
+try:
+    SLACK_REQUEST_URL = os.environ["SLACK_REQUEST_URL"]
+    GITHUB_OAUTH_TOKEN =  os.environ["GITHUB_OAUTH_TOKEN"]
+except KeyError as e:
+    import sys
+    print "Please check environment variables : %s" % e
+    sys.exit(1)
 
 
 app = Flask(__name__)
@@ -64,7 +69,8 @@ handler = GhEventHandler()
 def issue_comment(data):
     for label in data["issue"]["labels"]:
         slack_request(
-            Payload(channel=label["name"], number=data["issue"]["number"],
+            Payload(channel=label["name"], 
+                    number=data["issue"]["number"],
                     user=data["comment"]["user"]["login"],
                     body=data["comment"]["body"],
                     url=data["comment"]["html_url"],
@@ -75,6 +81,7 @@ def issue_comment(data):
 
 @handler.add_event("issues")
 def issues(data):
+    color = "#6cc644"
     for label in data["issue"]["labels"]:
         slack_request(
             Payload(channel=label["name"],
@@ -83,13 +90,15 @@ def issues(data):
                     user=data["issue"]["user"]["login"],
                     body=data["issue"]["body"],
                     url=data["issue"]["html_url"],
-                    label="New issue"
+                    label="New issue",
+                    color=color,
             )
         )
 
 
 @handler.add_event("issues", actions=["closed", "reopened"])
 def issues(data):
+    color = "#bd2c00" if data["action"] == "closed" else "#6cc644"
     for label in data["issue"]["labels"]:
         slack_request(
             Payload(channel=label["name"],
@@ -99,27 +108,41 @@ def issues(data):
                     user=data["issue"]["user"]["login"],
                     body=data["issue"]["body"],
                     url=data["issue"]["html_url"],
-                    label="Issue status changed"
+                    label="Issue status changed",
+                    color=color
             )
         )
 
 
 @handler.add_event("pull_request")
 def pull_requests(data):
-    data = data["pull_request"]
-    issue_url = data["issue_url"]
+    pull_request = data["pull_request"]
+    issue_url = pull_request["issue_url"]
     result = json.loads(requests.get(issue_url, auth=(GITHUB_OAUTH_TOKEN, 
                                                       "x-oauth-basic")).text)
+    if pull_request["state"] == "closed":
+        if pull_request["merged"] == True:
+            color = "#6e5494"
+            state = "merged"
+        else:
+            color = "#bd2c00"
+            state = "closed"
+    else:
+        color = "#6cc644"
+        state = "opened"
+    _label = "New pull request" if pull_request["state"] == "open" else \
+                "Pull request state changed"
     for label in result["labels"]:
         slack_request(
-            Payload(channel=label["name"],
-                    number=data["number"],
-                    action=data["state"],
-                    title=data["title"],
-                    user=data["user"]["login"],
-                    body=data["body"],
-                    url=data["html_url"],
-                    label="New pull request"
+            Payload(number=result["number"],
+                    channel=label["name"],
+                    action=state,
+                    title=pull_request["title"],
+                    user=pull_request["user"]["login"],
+                    body=pull_request["body"],
+                    url=pull_request["html_url"],
+                    label=_label,
+                    color=color
             )
         )
 
