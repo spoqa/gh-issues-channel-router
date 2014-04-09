@@ -105,7 +105,7 @@ def issues(data):
                     number=data["issue"]["number"],
                     action=data["action"],
                     title=data["issue"]["title"],
-                    user=data["sender"["login"],
+                    user=data["sender"]["login"],
                     body=data["issue"]["body"],
                     url=data["issue"]["html_url"],
                     label="Issue status changed",
