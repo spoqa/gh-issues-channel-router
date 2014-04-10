@@ -1,4 +1,3 @@
-import markdown
 
 
 class Payload(object):
@@ -12,8 +11,10 @@ class Payload(object):
         self.action = action.capitalize() if action else None
         self.number = number
         self.user = user
-        body = body.capitalize() if body else None
-        body = "%s\n<%s|See more>" % (body[:150], url)
+        if len(body) > 150:
+            body = "%s...\n<%s|See more>" % (body[:150], url)
+        else:
+            body = "%s\n<%s|See more>" % (body[:150], url)
         self.body = body
         self.url = url
         self.commit_id = commit_id
