@@ -24,13 +24,17 @@ class Payload(object):
         self.username = username
         self.icon_emoji = icon_emoji
         self.attachments = attachments if attachments else \
-                               self.default_attachments
+            self.default_attachments
 
     @property
     def message(self):
-        result = "%s by <%s|@%s> (<%s|#%s>)" % (self.label,
-                     "http://github.com/%s" % self.user, self.user, self.url,
-                     self.number)
+        result = "%s by <%s|@%s> (<%s|#%s>)" % (
+            self.label,
+            "http://github.com/%s" % self.user,
+            self.user,
+            self.url,
+            self.number
+        )
         return result
 
     def _generate_default_fields(self):
@@ -55,9 +59,13 @@ class Payload(object):
         return attachments
 
     def to_dict(self):
-        result_dict = {"username": self.username, "icon_emoji": self.icon_emoji,
-                       "channel": "#%s" % self.channel, "text": self.message,
-                       "attachments": [self.attachments.to_dict()],}
+        result_dict = {
+            "username": self.username,
+            "icon_emoji": self.icon_emoji,
+            "channel": "#%s" % self.channel,
+            "text": self.message,
+            "attachments": [self.attachments.to_dict()],
+        }
         return result_dict
 
 

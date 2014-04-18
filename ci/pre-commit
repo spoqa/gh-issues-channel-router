@@ -1,0 +1,13 @@
+#!/bin/bash
+# How to install:
+# $ ln -s `pwd`/ci/pre-commit .git/hooks/
+find . -name '*.pyc' -delete  # Remove all *.pyc files
+                              # http://stackoverflow.com/a/925597/383405
+if [[ ! $VIRTUAL_ENV && -e env/bin/activate && -x env/bin/python ]]; then
+  source env/bin/activate
+fi
+if [[ ! -d $VIRTUAL_ENV ]]; then
+  pip_user="--user"
+fi
+pip install $pip_user --quiet 'pep8>=1.5.0' 'flake8>=2.1.0' || exit 1
+flake8 . --exclude=env || exit 1
