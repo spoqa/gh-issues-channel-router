@@ -28,12 +28,12 @@ class Payload(object):
 
     @property
     def message(self):
-        result = "%s by <%s|@%s> (<%s|#%s>)" % (
+        result = "%s by <%s|@%s> (<%s|%s>)" % (
             self.label,
             "http://github.com/%s" % self.user,
             self.user,
             self.url,
-            self.number
+            '#%s' % self.number if self.number else "link",
         )
         return result
 
