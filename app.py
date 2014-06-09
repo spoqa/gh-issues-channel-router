@@ -167,6 +167,7 @@ def pull_request_review_comment(data):
         result["labels"],
         Payload(
             title=data["id"],
+            number=result["number"],
             commit_id=data["commit_id"],
             user=data["user"]["login"],
             body=data["body"],
