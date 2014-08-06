@@ -103,6 +103,44 @@ def issues(data):
     )
 
 
+@handler.add_event("issues", actions=["assigned", "unassigned"])
+def issues_assign(data):
+    color = "#bd2c00" if data["action"] == "closed" else "#6cc644"
+    label = "issue is {}".format(data["action"])
+    slack_request(
+        data["issue"]["labels"],
+        Payload(
+            number=data["issue"]["number"],
+            action=data["action"],
+            title=data["issue"]["title"],
+            user=data["sender"]["login"],
+            body=data["issue"]["body"],
+            url=data["issue"]["html_url"],
+            label=label,
+            color=color
+        )
+    )
+
+
+@handler.add_event("issues", actions=["labeled", "unlabeled"])
+def issues_label(data):
+    color = "#bd2c00" if data["action"] == "closed" else "#6cc644"
+    label = "issue is {}".format(data["action"])
+    slack_request(
+        data["issue"]["labels"],
+        Payload(
+            number=data["issue"]["number"],
+            action=data["action"],
+            title=data["issue"]["title"],
+            user=data["sender"]["login"],
+            body=data["issue"]["body"],
+            url=data["issue"]["html_url"],
+            label=label,
+            color=color
+        )
+    )
+
+
 @handler.add_event("issues", actions=["closed", "reopened"])
 def issues_closed_reopened(data):
     color = "#bd2c00" if data["action"] == "closed" else "#6cc644"
