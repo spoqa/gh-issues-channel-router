@@ -5,7 +5,8 @@ import requests
 
 from flask import Flask, request, jsonify
 
-from responses import Payload
+from responses import Payload, LightPayload
+
 
 try:
     SLACK_REQUEST_URL = os.environ["SLACK_REQUEST_URL"]
@@ -27,7 +28,8 @@ def slack_request(labels, payload):
         labels = DEFAULT_CHANNELS
     for label in labels:
         payload.channel = label
-        requests.post(SLACK_REQUEST_URL, data=json.dumps(payload.to_dict()))
+        data = json.dumps(payload.to_dict())
+        requests.post(SLACK_REQUEST_URL, data=data)
 
 
 class GhEventHandler(object):
@@ -103,6 +105,36 @@ def issues(data):
     )
 
 
+@handler.add_event("issues", actions=["labeled", "unlabeled"])
+def issues_label(data):
+    text = "Issue <{}|#{}> ({}): label `{}` {} by {}".format(
+           data["issue"]["html_url"],
+           data["issue"]["number"],
+           data["issue"]["title"].encode('utf-8'),
+           data["label"]["name"],
+           data["action"],
+           data["sender"]["login"])
+    slack_request(
+        data["issue"]["labels"],
+        LightPayload(text=text)
+    )
+
+
+@handler.add_event("issues", actions=["assigned", "unassigned"])
+def issues_assign(data):
+    text = "Issue <{}|#{}> ({}): {} {} by {}".format(
+           data["issue"]["html_url"],
+           data["issue"]["number"],
+           data["issue"]["title"].encode('utf-8'),
+           data.get("assignee").get("login"),
+           data["action"],
+           data["sender"]["login"])
+    slack_request(
+        data["issue"]["labels"],
+        LightPayload(text=text)
+    )
+
+
 @handler.add_event("issues", actions=["closed", "reopened"])
 def issues_closed_reopened(data):
     color = "#bd2c00" if data["action"] == "closed" else "#6cc644"
@@ -115,7 +147,7 @@ def issues_closed_reopened(data):
             user=data["sender"]["login"],
             body=data["issue"]["body"],
             url=data["issue"]["html_url"],
-            label="Issue status changed",
+            label="Issue {}".format(data["action"]),
             color=color
         )
     )
@@ -151,6 +183,44 @@ def pull_requests(data):
             label=_label,
             color=color
         )
+    )
+
+
+@handler.add_event("pull_request", actions=["labeled", "unlabeled"])
+def pr_label(data):
+    pull_request = data["pull_request"]
+    issue_url = pull_request["issue_url"]
+    result = json.loads(requests.get(issue_url, auth=(GITHUB_OAUTH_TOKEN,
+                                                      "x-oauth-basic")).text)
+    text = "Pull Request <{}|#{}> ({}): label `{}` {} by {}".format(
+           pull_request["html_url"],
+           data["number"],
+           pull_request["title"].encode('utf-8'),
+           data["label"]["name"],
+           data["action"],
+           data["sender"]["login"])
+    slack_request(
+        result["labels"],
+        LightPayload(text=text)
+    )
+
+
+@handler.add_event("pull_request", actions=["assigned", "unassigned"])
+def pr_assign(data):
+    pull_request = data["pull_request"]
+    issue_url = pull_request["issue_url"]
+    result = json.loads(requests.get(issue_url, auth=(GITHUB_OAUTH_TOKEN,
+                                                      "x-oauth-basic")).text)
+    text = "Pull Request <{}|#{}> ({}): {} {} by {}".format(
+           pull_request["html_url"],
+           data["number"],
+           pull_request["title"].encode('utf-8'),
+           pull_request["assignee"]["login"],
+           data["action"],
+           data["sender"]["login"])
+    slack_request(
+        result["labels"],
+        LightPayload(text=text)
     )
 
 

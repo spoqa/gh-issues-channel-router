@@ -69,6 +69,25 @@ class Payload(object):
         return result_dict
 
 
+class LightPayload(object):
+
+    def __init__(self, channel=None, action=None, username="Github",
+                 icon_emoji=":octocat:", text=None):
+        self.channel = channel
+        self.username = username
+        self.icon_emoji = icon_emoji
+        self.text = text
+
+    def to_dict(self):
+        result_dict = {
+            "username": self.username,
+            "icon_emoji": self.icon_emoji,
+            "channel": "#%s" % self.channel,
+            "text": self.text,
+        }
+        return result_dict
+
+
 class Attachment(object):
 
     def __init__(self, fallback="", text="", color="96bde5", fields=[]):
